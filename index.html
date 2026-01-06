@@ -165,32 +165,51 @@
         </div>
     </div>
 
-    <script>
+        <script>
         function convertAll() {
-            // 1. هات البيانات من الشاشة
             const inputVal = document.getElementById('inputNumber').value.trim();
             const inputBase = parseInt(document.getElementById('inputBase').value);
             const resultsDiv = document.getElementById('resultsDisplay');
 
-            // لو مفيش رقم، متعملش حاجة
             if (inputVal === "") {
                 alert("اكتب رقم الأول يا هندسة!");
                 return;
             }
 
-            // 2. حول الرقم لـ Decimal (الكوبري بتاعنا)
-            // الدالة parseInt بتاخد الرقم والأساس بتاعه وتحوله لعشري
-            let decimalValue = parseInt(inputVal, inputBase);
+            // دالة مخصصة لتحويل أي رقم (حتى لو بكسر) لعشري
+            // The Bridge Function (Any Base -> Decimal Float)
+            function anyBaseToDecimal(str, base) {
+                let [intPart, fracPart] = str.split('.');
+                
+                // 1. تحويل الجزء الصحيح
+                let integerValue = parseInt(intPart, base);
+                if (isNaN(integerValue)) return NaN;
 
-            // تأكد إن الرقم صح (يعني مدخلش حروف في رقم عشري مثلاً)
+                // 2. تحويل الكسر (لو موجود)
+                let fractionalValue = 0;
+                if (fracPart) {
+                    for (let i = 0; i < fracPart.length; i++) {
+                        // بنحول الحرف لقيمة (عشان الـ Hex فيه A,B..)
+                        let digit = parseInt(fracPart[i], base);
+                        if (isNaN(digit)) return NaN;
+                        // معادلة الكسر: الرقم * الأساس أس سالب الترتيب
+                        fractionalValue += digit * Math.pow(base, -(i + 1));
+                    }
+                }
+                
+                return integerValue + fractionalValue;
+            }
+
+            // تنفيذ التحويل
+            let decimalValue = anyBaseToDecimal(inputVal, inputBase);
+
             if (isNaN(decimalValue)) {
                 resultsDiv.style.display = "block";
-                resultsDiv.innerHTML = "<span style='color:red'>ERROR: Invalid Input!</span>";
+                resultsDiv.innerHTML = "<span style='color:red; text-align:center; display:block;'>ERROR: Invalid Input!</span>";
                 return;
             }
 
-            // 3. ابدأ اعرض النتائج
-            // عشان نرجع القائمة لطبيعتها لو كان فيه ايرور قبل كدة
+            // عرض النتائج
             resultsDiv.innerHTML = `
                 <div class="result-row"><span class="label">DEC:</span> <span id="resDec"></span></div>
                 <div class="result-row"><span class="label">BIN:</span> <span id="resBin"></span></div>
@@ -198,16 +217,17 @@
                 <div class="result-row"><span class="label">HEX:</span> <span id="resHex"></span></div>
             `;
             
-            // 4. وزع النتائج على الشاشة
+            // دالة للطباعة (بتحول العشري لأي نظام تاني)
+            // JS .toString(base) handles fractional parts efficiently
             document.getElementById('resDec').innerText = decimalValue.toString(10);
             document.getElementById('resBin').innerText = decimalValue.toString(2);
             document.getElementById('resOct').innerText = decimalValue.toString(8);
             document.getElementById('resHex').innerText = decimalValue.toString(16).toUpperCase();
 
-            // اظهر الشاشة السوداء اللي تحت
             resultsDiv.style.display = "block";
         }
     </script>
+
 
 </body>
 </html>
